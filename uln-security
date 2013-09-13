@@ -1,6 +1,53 @@
-#!/bin/zsh
-STYLESHEET="${0:t}.xsl"
-# echo "STYLESHEET=${STYLESHEET}"
-for fn in "${@:--}"; do
-	xsltproc "${STYLESHEET}" "${fn}"
-done
+#!/usr/bin/python
+
+import	os
+import	sys
+import	xml.etree.ElementTree as ET
+
+tree = ET.parse( 'updateinfo.xml' )
+root = tree.getroot()
+BANNER = 'ULN Security Updates'
+print '<html><head>'
+print '  <title>%s</title>' % BANNER
+print '  <link rel="stylesheet" type="text/css" href="style.css" />'
+print '</head><body>'
+print '  <h1>%s</h1>' % BANNER
+print '  <table id="hor-minimalist-a" summary="%s" border="0">' % BANNER
+print '    <colgroup>'
+print '      <col width="20%" align="center" />'
+print '      <col width="35%" align="center" />'
+print '      <col width="45%" align="center" />'
+print '    </colgroup>'
+print '    <thead>'
+print '      <tr>'
+print '        <th>Identifier</th>'
+print '        <th>RPM Packages</th>'
+print '        <th>Description</th>'
+print '      </tr>'
+print '    </thead>'
+print '    <tbody>'
+
+for update in sorted( root.findall( './/update[@type="security"]' ) ):
+	nid = update.find('id').text.strip()
+	title = update.find('title').text.strip()
+	desc  = update.find('description').text.strip()
+	print '      <tr>'
+	print '        <td><p>'
+	print '          %s <br />' % nid
+	print '          %s' % title
+	print '        </p></td>'
+	print '        <td><p>'
+	for package in sorted( update.findall('.//filename' ) ):
+		print '          %s <br />' % package.text.strip()
+	print '        </p></td>'
+	print '        <td><p>'
+	for ref in sorted( update.findall( './/reference') ):
+		href = ref.get('href').strip()
+		print '        <a href="%s">%s</a> <br />' % (href, href )
+	print '          %s' % desc.strip()
+	print '        </p></td>'
+	print '      </tr>'
+
+print '    </tbody>'
+print '  </table>'
+print '</body></html>'
