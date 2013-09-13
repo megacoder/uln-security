@@ -3,19 +3,22 @@
 import	os
 import	sys
 import	xml.etree.ElementTree as ET
+import	cgi
 
 tree = ET.parse( 'updateinfo.xml' )
 root = tree.getroot()
 BANNER = 'ULN Security Updates'
+STYLE  = 'hor-minimalist-a'
+# STYLE  = 'hor-zebra'
 print '<html><head>'
 print '  <title>%s</title>' % BANNER
 print '  <link rel="stylesheet" type="text/css" href="style.css" />'
 print '</head><body>'
 print '  <h1>%s</h1>' % BANNER
-print '  <table id="hor-minimalist-a" summary="%s" border="0">' % BANNER
+print '  <table id="%s" summary="%s" border="0">' % (STYLE, BANNER)
 print '    <colgroup>'
-print '      <col width="20%" align="center" />'
-print '      <col width="35%" align="center" />'
+print '      <col width="15%" align="center" />'
+print '      <col width="40%" align="center" />'
 print '      <col width="45%" align="center" />'
 print '    </colgroup>'
 print '    <thead>'
@@ -27,22 +30,30 @@ print '      </tr>'
 print '    </thead>'
 print '    <tbody>'
 
+is_odd = False
 for update in sorted( root.findall( './/update[@type="security"]' ) ):
-	nid = update.find('id').text.strip()
-	title = update.find('title').text.strip()
-	desc  = update.find('description').text.strip()
-	print '      <tr>'
+	nid = cgi.escape( update.find('id').text.strip() )
+	title = cgi.escape( update.find('title').text.strip() )
+	try:
+		desc  = cgi.escape( update.find('description').text.strip().decode('UTF-8').encode( 'ascii', 'replace' ) )
+	except UnicodeEncodeError:
+		desc = '*** TBD ***'
+	if is_odd:
+		print '      <tr class="odd">'
+	else:
+		print '      <tr>'
+	is_odd = not is_odd
 	print '        <td><p>'
 	print '          %s <br />' % nid
 	print '          %s' % title
 	print '        </p></td>'
 	print '        <td><p>'
 	for package in sorted( update.findall('.//filename' ) ):
-		print '          %s <br />' % package.text.strip()
+		print '          %s <br />' % cgi.escape( package.text.strip() )
 	print '        </p></td>'
 	print '        <td><p>'
 	for ref in sorted( update.findall( './/reference') ):
-		href = ref.get('href').strip()
+		href = cgi.escape( ref.get('href').strip() )
 		print '        <a href="%s">%s</a> <br />' % (href, href )
 	print '          %s' % desc.strip()
 	print '        </p></td>'
