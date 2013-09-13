@@ -1,0 +1,6 @@
+#!/bin/zsh
+STYLESHEET="${0:t}.xsl"
+# echo "STYLESHEET=${STYLESHEET}"
+for fn in "${@:--}"; do
+	xsltproc "${STYLESHEET}" "${fn}"
+done
